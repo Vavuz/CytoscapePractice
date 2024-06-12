@@ -1,4 +1,20 @@
-<button class="addNodeBtn" (click)="onAddNode()">Add node</button>
+<button mat-raised-button id="addNodeBtn" (click)="onAddNode()">Add Node</button>
 
-<div id="cy">
+<div id="workingarea">
+    <textarea id="textarea"></textarea>
+    <div id="cy"></div>
+    <div class="modal" [ngClass]="{'show': showModal}">
+        <div class="modal-content">
+          <span class="close" (click)="cancelNode()">&times;</span>
+          <h2>Add New Node</h2>
+          <form>
+            <label for="title">Title:</label>
+            <input type="text" id="title" [(ngModel)]="newNodeTitle" name="title">
+            <label for="description">Description:</label>
+            <input type="text" id="description" [(ngModel)]="newNodeDescription" name="description">
+            <button type="button" (click)="saveNode()">Save</button>
+            <button type="button" (click)="cancelNode()">Cancel</button>
+          </form>
+        </div>
+    </div>
 </div>

@@ -3,42 +3,33 @@ import { RouterOutlet } from '@angular/router';
 import cytoscape from 'cytoscape';
 import { PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { MatDialog } from '@angular/material/dialog';
+import { NodeDialogComponent } from './node-dialog/node-dialog.component';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet],
+  imports: [RouterOutlet, CommonModule, FormsModule],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })
 export class AppComponent implements OnInit{
-  title = 'CytoscapePractice';
+  title: string = 'CytoscapePractice';
   private cy: cytoscape.Core | undefined;
-  elements = [
-    {
-      data: { id: 'a' }
-    },
-    {
-      data: { id: 'b' }
-    },
-    {
-      data: { id: 'c' }
-    },
-    {
-      data: { id: 'd' },
-    },
-    {
-      data: { id: 'ab', source: 'a', target: 'b' }
-    },
-    {
-      data: { id: 'cd', source: 'c', target: 'd' }
-    },
-    {
-      data: { id: 'ad', source: 'a', target: 'd' }
-    }
-  ];
+  elements: any[] = [];
+  newNodeTitle: string = '';
+  newNodeDescription: string = '';
+  showModal: boolean = false;
 
-  constructor(@Inject(PLATFORM_ID) private platformId: Object) { }
+  constructor(@Inject(PLATFORM_ID) private platformId: Object, public dialog: MatDialog) {
+    if (isPlatformBrowser(this.platformId)) {
+      document.addEventListener('selectionchange', e => {
+        this.newNodeDescription = window.getSelection()!.toString();
+      });
+    }
+  }
 
   ngOnInit(): void {
     if (isPlatformBrowser(this.platformId)) {
@@ -49,8 +40,30 @@ export class AppComponent implements OnInit{
           {
             selector: 'node',
             style: {
-              'background-color': '#626',
-              'label': 'data(id)'
+              'shape': 'round-rectangle',
+              'width': '200px',
+              'height': 'auto',
+              'background-color': '#FFFFFF',
+              'border-color': '#000',
+              'border-width': '1px',
+              'font-size': '12px',
+              'text-wrap': 'wrap',
+              'text-max-width': '180px',
+              'content': 'data(description)',
+            }
+          },
+          {
+            selector: 'node:parent',
+            style: {
+              'shape': 'round-rectangle',
+              'background-color': '#f9f9f9',
+              'border-width': '1px',
+              'border-color': '#555',
+              'text-valign': 'top',
+              'text-halign': 'center',
+              'font-size': '14px',
+              'font-weight': 'bold',
+              'content': 'data(title)',
             }
           },
           {
@@ -63,7 +76,6 @@ export class AppComponent implements OnInit{
             }
           }
         ],
-
         layout: {
           name: 'grid',
           rows: 1
@@ -73,17 +85,46 @@ export class AppComponent implements OnInit{
   }
 
   onAddNode() {
-    const newId = `n${this.elements.length + 1}`;
+    const dialogRef = this.dialog.open(NodeDialogComponent, {
+      width: '300px',
+      data: { title: this.newNodeTitle, description: this.newNodeDescription }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        const newNode = {
+          data: { id: result.title, title: result.title, description: result.description }
+        };
+
+        this.elements.push(newNode);
+        this.cy?.add(newNode);
+
+        this.cy?.layout({
+          name: 'grid',
+          rows: 1
+        }).run();
+      }
+    });
+  }
+
+  saveNode() {
+    const newId = this.newNodeTitle;
     const newNode = {
-      data: { id: newId }
+      data: { id: newId, title: this.newNodeTitle, description: this.newNodeDescription }
     };
 
     this.elements.push(newNode);
     this.cy?.add(newNode);
 
     this.cy?.layout({
-      name: 'grid', // Or any layout that suits your needs
+      name: 'grid',
       rows: 1
     }).run();
+
+    this.showModal = false;
+  }
+
+  cancelNode() {
+    this.showModal = false;
   }
 }
