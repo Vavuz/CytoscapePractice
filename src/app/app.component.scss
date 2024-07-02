@@ -22,7 +22,7 @@
     background-color: rgb(209, 244, 247);
     width: 1000px;
     height: 600px;
-    outline-style:double;
+    outline-style: double;
     justify-content: flex-end;
 }
 
@@ -64,4 +64,21 @@
     color: black;
     text-decoration: none;
     cursor: pointer;
+}
+
+.cy-title {
+    text-align: center;
+    font-size: 14px;
+    font-weight: bold;
+    padding: 2px;
+}
+
+.node-html-label {
+    display: inline-block;
+    padding: 10px;
+    background-color: #fff;
+    border: 1px solid #000;
+    border-radius: 5px;
+    max-width: 200px;
+    word-wrap: break-word;
 }

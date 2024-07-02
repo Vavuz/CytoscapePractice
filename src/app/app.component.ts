@@ -8,14 +8,17 @@ import { FormsModule } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { NodeDialogComponent } from './node-dialog/node-dialog.component';
 
+import nodeHtmlLabel from 'cytoscape-node-html-label';
+nodeHtmlLabel(cytoscape);
+
 @Component({
   selector: 'app-root',
   standalone: true,
   imports: [RouterOutlet, CommonModule, FormsModule],
   templateUrl: './app.component.html',
-  styleUrl: './app.component.scss'
+  styleUrls: ['./app.component.scss']
 })
-export class AppComponent implements OnInit{
+export class AppComponent implements OnInit {
   title: string = 'CytoscapePractice';
   private cy: cytoscape.Core | undefined;
   elements: any[] = [];
@@ -41,29 +44,21 @@ export class AppComponent implements OnInit{
             selector: 'node',
             style: {
               'shape': 'round-rectangle',
-              'width': '200px',
-              'height': 'auto',
-              'background-color': '#FFFFFF',
-              'border-color': '#000',
-              'border-width': '1px',
-              'font-size': '12px',
+              'background-color': '#e0f7fa',
+              'border-color': '#00796b',
+              'border-width': '2px',
+              'font-size': '14px',
               'text-wrap': 'wrap',
+              'text-valign': 'center',
+              'text-halign': 'center',
+              'padding-left': '10px',
+              'padding-right': '10px',
+              'padding-top': '5px',
+              'padding-bottom': '5px',
+              'width': 'label',
+              'height': 'label',
               'text-max-width': '180px',
               'content': 'data(description)',
-            }
-          },
-          {
-            selector: 'node:parent',
-            style: {
-              'shape': 'round-rectangle',
-              'background-color': '#f9f9f9',
-              'border-width': '1px',
-              'border-color': '#555',
-              'text-valign': 'top',
-              'text-halign': 'center',
-              'font-size': '14px',
-              'font-weight': 'bold',
-              'content': 'data(title)',
             }
           },
           {
@@ -77,10 +72,21 @@ export class AppComponent implements OnInit{
           }
         ],
         layout: {
-          name: 'grid',
-          rows: 1
+          name: 'preset'
         }
       });
+
+      this.cy.nodeHtmlLabel([
+        {
+          query: 'node',
+          halign: 'center',
+          valign: 'top',
+          halignBox: 'center',
+          valignBox: 'top',
+          cssClass: 'cy-title',
+          tpl: (data: any) => `<div><strong>${data.title}</strong></div>`
+        }
+      ]);
     }
   }
 
@@ -93,16 +99,28 @@ export class AppComponent implements OnInit{
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
         const newNode = {
-          data: { id: result.title, title: result.title, description: result.description }
+          data: { 
+            id: result.title, 
+            title: result.title, 
+            description: result.description
+          },
+          position: { x: 100, y: 100 }
         };
 
         this.elements.push(newNode);
         this.cy?.add(newNode);
 
-        this.cy?.layout({
-          name: 'grid',
-          rows: 1
-        }).run();
+        this.cy?.nodeHtmlLabel([
+          {
+            query: `node[id="${newNode.data.id}"]`,
+            halign: 'center',
+            valign: 'top',
+            halignBox: 'center',
+            valignBox: 'top',
+            cssClass: 'cy-title',
+            tpl: (data: any) => `<div><strong>${data.title}</strong></div>`
+          }
+        ]);
       }
     });
   }
@@ -110,16 +128,28 @@ export class AppComponent implements OnInit{
   saveNode() {
     const newId = this.newNodeTitle;
     const newNode = {
-      data: { id: newId, title: this.newNodeTitle, description: this.newNodeDescription }
+      data: { 
+        id: newId, 
+        title: this.newNodeTitle, 
+        description: this.newNodeDescription
+      },
+      position: { x: 100, y: 100 }
     };
 
     this.elements.push(newNode);
     this.cy?.add(newNode);
 
-    this.cy?.layout({
-      name: 'grid',
-      rows: 1
-    }).run();
+    this.cy?.nodeHtmlLabel([
+      {
+        query: `node[id="${newNode.data.id}"]`,
+        halign: 'center',
+        valign: 'top',
+        halignBox: 'center',
+        valignBox: 'top',
+        cssClass: 'cy-title',
+        tpl: (data: any) => `<div><strong>${data.title}</strong></div>`
+      }
+    ]);
 
     this.showModal = false;
   }
