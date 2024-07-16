@@ -19,17 +19,19 @@ nodeHtmlLabel(cytoscape);
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, 
-    CommonModule, 
-    FormsModule, 
-    MatInputModule, 
-    MatButtonModule, 
-    MatFormFieldModule, 
-    MatDialogModule, 
+  imports: [
+    RouterOutlet,
+    CommonModule,
+    FormsModule,
+    MatInputModule,
+    MatButtonModule,
+    MatFormFieldModule,
+    MatDialogModule,
     MatSelectModule,
-    ReactiveFormsModule,],
+    ReactiveFormsModule,
+  ],
   templateUrl: './app.component.html',
-  styleUrls: ['./app.component.scss']
+  styleUrls: ['./app.component.scss'],
 })
 export class AppComponent implements OnInit {
   title: string = 'CytoscapePractice';
@@ -39,10 +41,15 @@ export class AppComponent implements OnInit {
   newNodeDescription: string = '';
   showModal: boolean = false;
   nodeCounter: number = 0;
+  edgeCounter: number = 0;
+  selectedNode: cytoscape.NodeSingular | null = null;
 
-  constructor(@Inject(PLATFORM_ID) private platformId: Object, public dialog: MatDialog) {
+  constructor(
+    @Inject(PLATFORM_ID) private platformId: Object,
+    public dialog: MatDialog
+  ) {
     if (isPlatformBrowser(this.platformId)) {
-      document.addEventListener('selectionchange', e => {
+      document.addEventListener('selectionchange', (e) => {
         this.newNodeDescription = window.getSelection()!.toString();
       });
     }
@@ -81,50 +88,47 @@ export class AppComponent implements OnInit {
               'width': 3,
               'line-color': '#ccc',
               'target-arrow-color': '#ccc',
-              'target-arrow-shape': 'triangle'
-            }
-          }
+              'target-arrow-shape': 'triangle',
+            },
+          },
         ],
         layout: {
-          name: 'preset'
-        }
+          name: 'preset',
+        },
+        userZoomingEnabled: true,
+        userPanningEnabled: true,
+        autoungrabify: false,
       });
 
-      this.cy.nodeHtmlLabel([
-        {
-          query: 'node',
-          halign: 'center',
-          valign: 'top',
-          halignBox: 'center',
-          valignBox: 'top',
-          cssClass: 'cy-title',
-          tpl: (data: any) => `<div><strong>${data.title}</strong></div>`
-        }
-      ]);
+      this.cy.on('dblclick', 'node', (event) => {
+        event.preventDefault();
+        this.onNodeDoubleClick(event.target)
+      });
+      
     }
   }
 
   onAddNode() {
     const dialogRef = this.dialog.open(NodeDialogComponent, {
       width: '300px',
-      data: { title: this.newNodeTitle, description: this.newNodeDescription }
+      data: { title: this.newNodeTitle, description: this.newNodeDescription },
     });
-  
-    dialogRef.afterClosed().subscribe(result => {
+
+    dialogRef.afterClosed().subscribe((result) => {
       if (result) {
         const newNode = {
-          data: { 
-            id: `${this.nodeCounter}`, 
-            title: result.title, 
+          data: {
+            id: `${this.nodeCounter}`,
+            title: result.title,
             description: result.description
           },
-          position: { x: 100, y: 100 }
+          position: { x: 100, y: 100 },
         };
-        
+
         this.nodeCounter++;
         this.elements.push(newNode);
         const addedNode = this.cy?.add(newNode);
-  
+
         this.cy?.nodeHtmlLabel([
           {
             query: `node[id="${newNode.data.id}"]`,
@@ -134,15 +138,15 @@ export class AppComponent implements OnInit {
             valignBox: 'center',
             cssClass: 'cy-title',
             tpl: (data: any) => `
-              <div style="border: 1px solid #000; border-radius: 5px; padding: 10px; background-color: #fff;">
+              <div style="border: 1px solid #000; border-radius: 5px; padding: 10px; background-color: #fff; cursor: pointer;">
                 <div style="font-weight: bold; text-align: center;">${data.title}</div>
                 <hr style="margin: 5px 0;">
                 <div style="text-align: left;">${data.description}</div>
-              </div>`
-          }
+              </div>`,
+          },
         ]);
-  
-        addedNode?.forEach(node => {
+
+        addedNode?.forEach((node) => {
           node.grabify();
           node.on('grab', () => {
             node.grabify();
@@ -150,6 +154,25 @@ export class AppComponent implements OnInit {
         });
       }
     });
+  }
+
+  onNodeDoubleClick(node: cytoscape.NodeSingular) {
+    if (this.selectedNode) {
+      console.log(this.selectedNode);
+      this.cy?.add({
+        group: 'edges',
+        data: {
+          id: `e${this.edgeCounter}`,
+          source: this.selectedNode.id(),
+          target: node.id(),
+        },
+      });
+
+      this.edgeCounter++;
+      this.selectedNode = null;
+    } else {
+      this.selectedNode = node;
+    }
   }
 
   saveNode() {
