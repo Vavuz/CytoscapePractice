@@ -1,0 +1,14 @@
+<h1 mat-dialog-title>Select Relation Type</h1>
+<div mat-dialog-content>
+  <mat-form-field appearance="fill" class="wide-select">
+    <mat-label>Relation Type</mat-label>
+    <mat-select [formControl]="relationControl" [(ngModel)]="data.relationType">
+      <mat-option *ngFor="let relation of relationTypes" [value]="relation">{{ relation }}</mat-option>
+    </mat-select>
+    <mat-error *ngIf="relationControl.hasError('required')">You must select a relation type</mat-error>
+  </mat-form-field>
+</div>
+<div mat-dialog-actions>
+  <button mat-button (click)="onCancel()">Cancel</button>
+  <button mat-button (click)="onSave()">Save</button>
+</div>
