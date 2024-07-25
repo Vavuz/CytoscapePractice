@@ -184,9 +184,42 @@ export class AppComponent implements OnInit {
       return;
     }
   
-    if (this.selectedNode) {
-      const existingEdge = this.cy?.edges(`[source="${this.selectedNode.id()}"][target="${node.id()}"]`);
-      if (existingEdge && existingEdge.length > 0) {
+    if (!this.selectedNode) {
+      this.selectedNode = node;
+      return;
+    }
+
+    // Check for existing edge
+    const existingEdge = this.cy?.edges().some((edge) => {
+      const sourceId = this.selectedNode!.id();
+      const targetId = node.id();
+      const edgeSource = edge.data('source');
+      const edgeTarget = edge.data('target');
+
+      // Check for direct connection
+      if (edgeSource === sourceId && edgeTarget === targetId) {
+        return true;
+      }
+
+      // Check for indirect connection (through a relation node)
+      if (edgeSource === sourceId && this.cy?.getElementById(edgeTarget).data('shape') === 'diamond') {
+        const targetEdges = this.cy?.edges(`[source="${edgeTarget}"][target="${targetId}"]`);
+        if (targetEdges && targetEdges.length > 0) {
+          return true;
+        }
+      }
+
+      return false;
+    });
+
+    // Alert the user if a connection already exists
+    if (existingEdge) {
+
+      this.snackBar.open('This connection already exists', 'Close', {
+        duration: 3000,
+      });
+
+      this.selectedNode = null;
         return;
       }
   
