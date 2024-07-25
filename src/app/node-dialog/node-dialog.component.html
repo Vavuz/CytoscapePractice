@@ -13,7 +13,8 @@
   </mat-form-field>
   <mat-form-field appearance="fill">
     <mat-label>Description</mat-label>
-    <input matInput [(ngModel)]="data.description">
+    <input matInput [formControl]="descriptionControl" [(ngModel)]="data.description">
+    <mat-error *ngIf="descriptionControl.hasError('required')">You must provide a description</mat-error>
   </mat-form-field>
 </div>
 <div mat-dialog-actions>

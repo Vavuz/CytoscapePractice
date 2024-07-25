@@ -104,6 +104,7 @@ export class NodeDialogComponent {
 
   matcher = new MyErrorStateMatcher();
   titleControl = new FormControl('', [Validators.required]);
+  descriptionControl = new FormControl('', [Validators.required]);
 
   constructor(
     public dialogRef: MatDialogRef<NodeDialogComponent>,
@@ -115,7 +116,7 @@ export class NodeDialogComponent {
   }
 
   onSave(): void {
-    if (this.titleControl.valid) {
+    if (this.titleControl.valid && this.descriptionControl.valid) {
       this.dialogRef.close(this.data);
     }
   }
