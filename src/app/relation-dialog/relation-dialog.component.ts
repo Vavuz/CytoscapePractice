@@ -7,7 +7,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatSelectModule } from '@angular/material/select';
 import { CommonModule } from '@angular/common';
-import { MyErrorStateMatcher } from '../node-dialog/node-dialog.component';
+import { MyErrorStateMatcher } from '../node-dialog/node-dialog.component';import { MatCheckboxModule } from '@angular/material/checkbox';
 
 @Component({
   selector: 'app-relation-dialog',
@@ -20,6 +20,7 @@ import { MyErrorStateMatcher } from '../node-dialog/node-dialog.component';
     MatButtonModule,
     MatDialogModule,
     MatSelectModule,
+    MatCheckboxModule,
     CommonModule,
   ],
   templateUrl: './relation-dialog.component.html',
@@ -33,18 +34,29 @@ export class RelationDialogComponent {
     'Analogizes', 'Qualifies', 'Acknowledges', 'Counters', 'Extends', 'Refutes',
   ];
 
+  isEditMode: boolean = false;
   matcher = new MyErrorStateMatcher();
   relationControl = new FormControl('', [Validators.required]);
   
-  constructor(public dialogRef: MatDialogRef<RelationDialogComponent>, @Inject(MAT_DIALOG_DATA) public data: any) {}
+  constructor(
+    public dialogRef: MatDialogRef<RelationDialogComponent>,
+    @Inject(MAT_DIALOG_DATA) public data: any
+  ) {
+    this.isEditMode = data.isEditMode || false;
+  }
+  
 
   onCancel(): void {
     this.dialogRef.close();
   }
-
+  
   onSave(): void {
-    if (this.relationControl.valid) {
+    if (this.isValid()) {
       this.dialogRef.close(this.data);
     }
   }
-}
+  
+  isValid(): boolean {
+    return this.data.directConnection || this.relationControl.valid;
+  }
+}  
