@@ -1,4 +1,4 @@
-import { Component, OnInit, Inject } from '@angular/core';
+import { Component, OnInit, Inject, Renderer2, ViewChild, ViewContainerRef, ComponentRef } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import cytoscape from 'cytoscape';
 import { PLATFORM_ID } from '@angular/core';
@@ -13,6 +13,8 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatSelectModule } from '@angular/material/select';
 import { RelationDialogComponent } from './relation-dialog/relation-dialog.component';
+import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
+import { ContextMenuComponent } from './context-menu/context-menu.component';
 
 import nodeHtmlLabel from 'cytoscape-node-html-label';
 nodeHtmlLabel(cytoscape);
@@ -30,6 +32,7 @@ nodeHtmlLabel(cytoscape);
     MatDialogModule,
     MatSelectModule,
     ReactiveFormsModule,
+    MatSnackBarModule,
   ],
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss'],
@@ -44,10 +47,16 @@ export class AppComponent implements OnInit {
   nodeCounter: number = 0;
   edgeCounter: number = 0;
   selectedNode?: cytoscape.NodeSingular | null = null;
+  contextMenu: HTMLElement | null = null;
+
+  @ViewChild('contextMenuContainer', { read: ViewContainerRef }) contextMenuContainer!: ViewContainerRef;
+  private contextMenuRef: ComponentRef<ContextMenuComponent> | null = null;
 
   constructor(
     @Inject(PLATFORM_ID) private platformId: Object,
-    public dialog: MatDialog
+    public dialog: MatDialog,
+    private snackBar: MatSnackBar,
+    private renderer: Renderer2
   ) {
     if (isPlatformBrowser(this.platformId)) {
       document.addEventListener('selectionchange', (e) => {
@@ -120,13 +129,86 @@ export class AppComponent implements OnInit {
         userPanningEnabled: true,
         autoungrabify: false,
       });
-
+      
       // Handle double-click events on nodes
       this.cy.on('dblclick', 'node', (event) => {
         event.preventDefault();
         this.onNodeDoubleClick(event.target);
       });
+
+      // Handle right-click events on nodes
+      this.cy.on('cxttap', 'node', (event) => {
+        event.preventDefault();
+        this.showContextMenu(event.target, event.originalEvent);
+      });
+
+      // Prevent default context menu on the entire document
+      this.renderer.listen('document', 'contextmenu', (event) => {
+        event.preventDefault();
+      });
+
+      // Handle click on background to hide context menu and deselect node
+      this.cy.on('tap', (event) => {
+        if (event.target === this.cy) {
+          this.hideContextMenu();
+          this.selectedNode = null;
+        }
+      });
     }
+  }
+
+  showContextMenu(node: cytoscape.NodeSingular, event: MouseEvent) {
+    this.hideContextMenu();
+  
+    const contextMenuRef = this.contextMenuContainer.createComponent(ContextMenuComponent);
+    contextMenuRef.instance.editNode.subscribe(() => {
+      this.hideContextMenu();
+      this.editNode(node);
+    });
+  
+    const domElem = (contextMenuRef.hostView as any).rootNodes[0] as HTMLElement;
+    domElem.style.position = 'absolute';
+    domElem.style.top = `${event.clientY}px`;
+    domElem.style.left = `${event.clientX}px`;
+    domElem.style.zIndex = '1000';
+  
+    this.contextMenuRef = contextMenuRef;
+  }
+  
+  hideContextMenu() {
+    if (this.contextMenuRef) {
+      this.contextMenuRef.destroy();
+      this.contextMenuRef = null;
+    }
+  }
+
+  editNode(node: cytoscape.NodeSingular) {
+    const isRelationNode = node.data('shape') === 'diamond';
+    var dialogRef;
+
+    if(isRelationNode) {
+      dialogRef = this.dialog.open(RelationDialogComponent, {
+        width: '300px',
+        data: { title: node.data('title'), isEditMode: true },
+      });
+    }
+    else {
+      dialogRef = this.dialog.open(NodeDialogComponent, {
+        width: '300px',
+        data: { title: node.data('title'), description: node.data('description'), isEditMode: true },
+      });
+    }  
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        if (isRelationNode) {
+          node.data('title', result.relationType);
+        } else {
+          node.data('title', result.title);
+          node.data('description', result.description);
+        }
+      }
+    });
   }
 
   onAddNode() {
@@ -183,7 +265,7 @@ export class AppComponent implements OnInit {
     if (node.data('shape') === 'diamond') {
       return;
     }
-  
+
     if (!this.selectedNode) {
       this.selectedNode = node;
       return;
@@ -220,31 +302,42 @@ export class AppComponent implements OnInit {
       });
 
       this.selectedNode = null;
-        return;
-      }
-  
-      const dialogRef = this.dialog.open(RelationDialogComponent, {
-        width: '300px',
-        data: { relationType: '' },
-      });
-  
-      dialogRef.afterClosed().subscribe((result) => {
-        if (result) {
+      return;
+    }
+
+    const dialogRef = this.dialog.open(RelationDialogComponent, {
+      width: '300px',
+      data: { relationType: '', directConnection: false, isEditMode: false },
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        if (result.directConnection) {
+          this.cy?.add({
+            group: 'edges',
+            data: {
+              id: `e${this.edgeCounter}`,
+              source: this.selectedNode!.id(),
+              target: node.id(),
+              label: result.relationType,
+            },
+          });
+        } else {
           let midX, midY;
-  
+
           // Calculate position for self-loop connections
           if (this.selectedNode!.id() === node.id()) {
             const nodePosition = this.selectedNode!.position();
             midX = nodePosition.x + 150;
             midY = nodePosition.y;
           } else {
-            // Calculate midpoint
+            // Calculate midpoint for any other connection
             const sourcePosition = this.selectedNode!.position();
             const targetPosition = node.position();
             midX = (sourcePosition.x + targetPosition.x) / 2;
             midY = (sourcePosition.y + targetPosition.y) / 2;
           }
-  
+
           // Create relation node at calculated position
           const relationNode = {
             data: {
@@ -256,9 +349,9 @@ export class AppComponent implements OnInit {
             },
             position: { x: midX, y: midY },
           };
-  
+
           this.cy?.add(relationNode);
-  
+
           // Create edges from source to relation node and from relation node to target
           this.cy?.add([
             {
@@ -280,15 +373,13 @@ export class AppComponent implements OnInit {
               },
             },
           ]);
-  
-          this.edgeCounter++;
-          this.selectedNode = null;
         }
-      });
-    } else {
-      this.selectedNode = node;
-    }
-  }  
+
+        this.edgeCounter++;
+        this.selectedNode = null;
+      }
+    });
+  }
 
   saveNode() {
     this.showModal = false;
