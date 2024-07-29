@@ -1,5 +1,5 @@
-<h1 mat-dialog-title>Add New Node</h1>
-<div mat-dialog-content>
+<h1 mat-dialog-title>{{ data.isEditMode ? 'Edit Node' : 'Add New Node' }}</h1>
+<div mat-dialog-content style="padding-bottom: 0;">
   <mat-form-field appearance="fill" class="wide-select">
     <mat-label>Argument Type</mat-label>
     <mat-select [formControl]="titleControl" [(ngModel)]="data.title" [errorStateMatcher]="matcher">
@@ -17,7 +17,7 @@
     <mat-error *ngIf="descriptionControl.hasError('required')">You must provide a description</mat-error>
   </mat-form-field>
 </div>
-<div mat-dialog-actions>
+<div mat-dialog-actions class="cancel-save">
   <button mat-button (click)="onCancel()">Cancel</button>
   <button mat-button (click)="onSave()">Save</button>
 </div>

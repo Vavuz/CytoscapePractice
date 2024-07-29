@@ -1,5 +1,5 @@
-<h1 mat-dialog-title>Select Relation Type</h1>
-<div mat-dialog-content>
+<h1 mat-dialog-title>{{ data.isEditMode ? 'Select New Relation Type' : 'Select Relation Type' }}</h1>
+<div mat-dialog-content style="padding-bottom: 0;">
   <mat-form-field appearance="fill" class="wide-select">
     <mat-label>Relation Type</mat-label>
     <mat-select [formControl]="relationControl" [(ngModel)]="data.relationType">
@@ -9,7 +9,7 @@
   </mat-form-field>
   <mat-checkbox *ngIf="!data.isEditMode" [(ngModel)]="data.directConnection">Do not add a relation node</mat-checkbox>
 </div>
-<div mat-dialog-actions>
+<div mat-dialog-actions class="cancel-save">
   <button mat-button (click)="onCancel()">Cancel</button>
   <button mat-button (click)="onSave()" [disabled]="!isValid()">Save</button>
 </div>
