@@ -94,7 +94,7 @@ export class AppComponent implements OnInit {
             },
           },
           {
-            selector: 'node[shape="diamond"]',
+            selector: 'node[nodeType="relation"]',
             style: {
               'shape': 'diamond',
               'background-color': '#f6ad4b',
@@ -225,6 +225,7 @@ export class AppComponent implements OnInit {
             id: `${this.nodeCounter}`,
             title: result.title,
             description: result.description,
+            nodeType: 'node',
           },
           position: { x: 100, y: 100 },
         };
@@ -250,7 +251,8 @@ export class AppComponent implements OnInit {
               </div>`,
           },
         ]);
-
+        
+        // Each node becomes grabbable
         addedNode?.forEach((node) => {
           node.grabify();
           node.on('grab', () => {
@@ -262,8 +264,8 @@ export class AppComponent implements OnInit {
   }
 
   onNodeDoubleClick(node: cytoscape.NodeSingular) {
-    // Prevent creating connections starting from a relation node (diamond shape)
-    if (node.data('shape') === 'diamond') {
+    // Prevent creating connections starting from a relation node
+    if (node.data('nodeType') === 'relation') {
       return;
     }
 
@@ -285,7 +287,7 @@ export class AppComponent implements OnInit {
       }
 
       // Check for indirect connection (through a relation node)
-      if (edgeSource === sourceId && this.cy?.getElementById(edgeTarget).data('shape') === 'diamond') {
+      if (edgeSource === sourceId && this.cy?.getElementById(edgeTarget).data('nodeType') === 'relation') {
         const targetEdges = this.cy?.edges(`[source="${edgeTarget}"][target="${targetId}"]`);
         if (targetEdges && targetEdges.length > 0) {
           return true;
@@ -297,7 +299,6 @@ export class AppComponent implements OnInit {
 
     // Alert the user if a connection already exists
     if (existingEdge) {
-
       this.snackBar.open('This connection already exists', 'Close', {
         duration: 3000,
       });
@@ -345,7 +346,7 @@ export class AppComponent implements OnInit {
               id: `r${this.edgeCounter}`,
               title: result.relationType,
               description: '',
-              shape: 'diamond',
+              nodeType: 'relation',
               'background-color': '#f0cd7e',
             },
             position: { x: midX, y: midY },
