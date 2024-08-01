@@ -41,7 +41,6 @@ export class NodeDialogComponent {
         'Hypothetical Syllogism',
         'Modus Ponens',
         'Modus Tollens',
-        'Reductio ad Absurdum'
       ]
     },
     {
@@ -51,7 +50,7 @@ export class NodeDialogComponent {
         'Statistical Syllogism',
         'Argument from Analogy',
         'Causal Inference',
-        'Prediction'
+        'Prediction',
       ]
     },
     {
@@ -59,7 +58,7 @@ export class NodeDialogComponent {
       arguments: [
         'Argument from Authority',
         'Argument from Ignorance (Ad Ignorantiam)',
-        'Presumptive Defeasible Generalization'
+        'Presumptive Defeasible Generalization',
       ]
     },
     {
@@ -69,25 +68,28 @@ export class NodeDialogComponent {
         'Straw Man',
         'False Dichotomy (False Dilemma)',
         'Begging the Question',
-        'Slippery Slope'
+        'Slippery Slope',
       ]
     },
     {
-      name: 'Other Logical Arguments',
+      name: 'Other Speech Acts',
       arguments: [
         'Argument from Sign',
         'Existential Statement',
         'Argument by Example',
         'Argument from Consequences',
-        'Argument from Silence'
-      ]
-    },
-    {
-      name: 'Rhetorical Arguments',
-      arguments: [
-        'Ethical Appeal (Ethos)',
-        'Emotional Appeal (Pathos)',
-        'Logical Appeal (Logos)'
+        'Argument from Silence',
+        // -----
+        'Rhetorical Question',
+        'Similarity',
+        'Counter example',
+        'Assertion',
+        'Question',
+        'Directive',
+        'Counter-Example',
+        'Rebuttal',
+        'Existential Statement',
+        'Threat',
       ]
     },
     {
@@ -97,7 +99,14 @@ export class NodeDialogComponent {
         'Appeal to Tradition',
         'Appeal to Novelty',
         'Appeal to Popularity (Ad Populum)',
-        'Gambler\'s Fallacy'
+        'Gambler\'s Fallacy',
+      ]
+    },
+    {
+      name: 'Other Argument Types',
+      arguments: [
+        'Appeal to Expert Opinion',
+        'Position to Know',
       ]
     }
   ];

@@ -184,7 +184,7 @@ export class AppComponent implements OnInit {
   }
 
   editNode(node: cytoscape.NodeSingular) {
-    const isRelationNode = node.data('shape') === 'diamond';
+    const isRelationNode = node.data('nodeType') === 'relation';
     var dialogRef;
 
     if(isRelationNode) {
@@ -265,7 +265,10 @@ export class AppComponent implements OnInit {
 
   onNodeDoubleClick(node: cytoscape.NodeSingular) {
     // Prevent creating connections starting from a relation node
-    if (node.data('nodeType') === 'relation') {
+    if (node.data('nodeType') === 'relation' && !this.selectedNode) {
+      this.snackBar.open('Connections cannot start from a relation node', 'Close', {
+        duration: 3000,
+      });
       return;
     }
 
