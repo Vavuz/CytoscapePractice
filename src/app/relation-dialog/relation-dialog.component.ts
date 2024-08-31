@@ -35,6 +35,7 @@ export class RelationDialogComponent {
   ];
 
   isEditMode: boolean = false;
+  isConnectionToRelationNode: boolean = false;
   matcher = new MyErrorStateMatcher();
   relationControl = new FormControl('', [Validators.required]);
   
@@ -43,6 +44,7 @@ export class RelationDialogComponent {
     @Inject(MAT_DIALOG_DATA) public data: any
   ) {
     this.isEditMode = data.isEditMode || false;
+    this.isConnectionToRelationNode = data.isConnectionToRelationNode || false;
   }
   
 

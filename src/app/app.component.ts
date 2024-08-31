@@ -48,6 +48,7 @@ export class AppComponent implements OnInit {
   edgeCounter: number = 0;
   selectedNode?: cytoscape.NodeSingular | null = null;
   contextMenu: HTMLElement | null = null;
+  connectionToRelationNode: boolean = false;
 
   @ViewChild('contextMenuContainer', { read: ViewContainerRef }) contextMenuContainer!: ViewContainerRef;
   private contextMenuRef: ComponentRef<ContextMenuComponent> | null = null;
@@ -263,13 +264,62 @@ export class AppComponent implements OnInit {
     });
   }
 
+  areConnected(firstNode: cytoscape.NodeSingular, secondNode: cytoscape.NodeSingular) {
+    // Collect all final destination nodes
+    const connectedFinalDestinations = new Set<string>();
+    const sourceId = firstNode!.id();
+
+    // Get all outgoing edges and target nodes starting from the source node
+    const outgoingEdges = this.cy?.$(`#${sourceId}`).outgoers('edge');
+
+    outgoingEdges?.forEach((edge) => {
+      const target = edge.target();
+    
+      if (target.data('nodeType') === 'relation') {
+        // If the target is a relation node, get its outgoing edges
+        const relationOutgoingEdges = target.outgoers('edge');
+    
+        // Add each of the targets of these edges to the final destination set
+        relationOutgoingEdges.forEach((relationEdge) => {
+          const relationTarget = relationEdge.target();
+          connectedFinalDestinations.add(relationTarget.id());
+        });
+      } else {
+        // If the target is a regular node, add it directly to the final destination set
+        connectedFinalDestinations.add(target.id());
+      }
+    });
+
+    let existingEdge = false;
+
+    if (connectedFinalDestinations.has(secondNode.id())) {
+      existingEdge = true;
+    }
+    else if (secondNode.data('nodeType') === 'relation') {
+      // Check if trying to connect to a relation node that connects to any nodes in connectedFinalDestinations
+      const relationOutgoingEdges = secondNode.outgoers('edge');
+      relationOutgoingEdges.forEach((relationEdge) => {
+        const relationTarget = relationEdge.target();
+        if (connectedFinalDestinations.has(relationTarget.id())) {
+          existingEdge = true;
+        }
+      });
+    }
+
+    return existingEdge;
+  }
+
   onNodeDoubleClick(node: cytoscape.NodeSingular) {
     // Prevent creating connections starting from a relation node
-    if (node.data('nodeType') === 'relation' && !this.selectedNode) {
-      this.snackBar.open('Connections cannot start from a relation node', 'Close', {
-        duration: 3000,
-      });
-      return;
+    if (node.data('nodeType') === 'relation') {
+      if (!this.selectedNode) {
+        this.snackBar.open('Connections cannot start from a relation node', 'Close', {
+          duration: 3000,
+        });
+        return;
+      }
+      
+      this.connectionToRelationNode = true;
     }
 
     if (!this.selectedNode) {
@@ -277,31 +327,8 @@ export class AppComponent implements OnInit {
       return;
     }
 
-    // Check for existing edge
-    const existingEdge = this.cy?.edges().some((edge) => {
-      const sourceId = this.selectedNode!.id();
-      const targetId = node.id();
-      const edgeSource = edge.data('source');
-      const edgeTarget = edge.data('target');
-
-      // Check for direct connection
-      if (edgeSource === sourceId && edgeTarget === targetId) {
-        return true;
-      }
-
-      // Check for indirect connection (through a relation node)
-      if (edgeSource === sourceId && this.cy?.getElementById(edgeTarget).data('nodeType') === 'relation') {
-        const targetEdges = this.cy?.edges(`[source="${edgeTarget}"][target="${targetId}"]`);
-        if (targetEdges && targetEdges.length > 0) {
-          return true;
-        }
-      }
-
-      return false;
-    });
-
     // Alert the user if a connection already exists
-    if (existingEdge) {
+    if (this.areConnected(this.selectedNode, node)) {
       this.snackBar.open('This connection already exists', 'Close', {
         duration: 3000,
       });
@@ -312,7 +339,12 @@ export class AppComponent implements OnInit {
 
     const dialogRef = this.dialog.open(RelationDialogComponent, {
       width: '300px',
-      data: { relationType: '', directConnection: false, isEditMode: false },
+      data: {
+        relationType: '',
+        directConnection: this.connectionToRelationNode ? true : false,
+        isEditMode: false,
+        isConnectionToRelationNode: this.connectionToRelationNode
+      },
     });
 
     dialogRef.afterClosed().subscribe((result) => {
@@ -382,6 +414,7 @@ export class AppComponent implements OnInit {
 
         this.edgeCounter++;
         this.selectedNode = null;
+        this.connectionToRelationNode = false;
       }
     });
   }
