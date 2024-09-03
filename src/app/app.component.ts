@@ -74,27 +74,6 @@ export class AppComponent implements OnInit {
         elements: this.elements,
         style: [
           {
-            selector: 'node',
-            style: {
-              'shape': 'round-rectangle',
-              'background-color': '#e0f7fa',
-              'border-color': '#00796b',
-              'border-width': '2px',
-              'font-size': '14px',
-              'text-wrap': 'wrap',
-              'text-valign': 'center',
-              'text-halign': 'center',
-              'padding-left': '10px',
-              'padding-right': '10px',
-              'padding-top': '5px',
-              'padding-bottom': '5px',
-              'width': 'label',
-              'height': 'label',
-              'text-max-width': '180px',
-              'content': 'data(description)',
-            },
-          },
-          {
             selector: 'node[nodeType="relation"]',
             style: {
               'shape': 'diamond',
