@@ -40,7 +40,7 @@ nodeHtmlLabel(cytoscape);
 export class AppComponent implements OnInit {
   title: string = 'CytoscapePractice';
   private cy: cytoscape.Core | undefined;
-  elements: any[] = [];
+    elements: any[] = [];
   newNodeTitle: string = '';
   newNodeDescription: string = '';
   showModal: boolean = false;
@@ -49,7 +49,7 @@ export class AppComponent implements OnInit {
   selectedNode?: cytoscape.NodeSingular | null = null;
   contextMenu: HTMLElement | null = null;
   connectionToRelationNode: boolean = false;
-
+  
   @ViewChild('contextMenuContainer', { read: ViewContainerRef }) contextMenuContainer!: ViewContainerRef;
   private contextMenuRef: ComponentRef<ContextMenuComponent> | null = null;
 
@@ -392,9 +392,10 @@ export class AppComponent implements OnInit {
         }
 
         this.edgeCounter++;
-        this.selectedNode = null;
         this.connectionToRelationNode = false;
       }
+
+      this.selectedNode = null;
     });
   }
 
